@@ -28,6 +28,20 @@
 int p = 0; //mode of the program
 int fifo_next = 0; //denotes next frame for FIFO
 
+//LRU PART 
+//created for the LRU replacement, not related to FIFO
+struct lru_node {
+  int age_val;
+  int data;
+  struct lru_node *next;
+};
+
+typedef struct lru_node LRU_node;
+
+int lru_size = 0;
+LRU_node *lru_head;
+//LRU PART END
+
 struct tlbentry {
   int logical;
   int physical;
@@ -82,7 +96,31 @@ int FIFO(){
 }
 
 int LRU(){
+  LRU_node *curr = lru_head;
+  LRU_node *prev = lru_head;
 
+  int min = 0;
+
+  while(curr->next != NULL){
+      int next_age_val = (curr->next)->age_val;
+
+      if(min < next_age_val){
+          prev = curr;
+          min = next_age_val;
+      }
+      curr = curr->next;
+  }
+
+  LRU_node *tmp1 = (prev->next);
+  LRU_node *tmp2 = tmp1 ->next;
+
+  int res = (tmp1)->data;
+  free(tmp1);
+
+  prev->next = tmp2;
+  lru_size--;
+
+  return res;
 }
 
 int main(int argc, const char *argv[]){
@@ -93,7 +131,12 @@ int main(int argc, const char *argv[]){
       }
 
       p = atoi(argv[4]);
-
+      
+      //LRU is initialized to keep track of LRU replacement
+      lru_head = malloc(sizeof(LRU_node));
+      lru_head->age_val = 0;
+      lru_head->next = NULL;
+      
       const char *backing_filename = argv[1]; 
       int backing_fd = open(backing_filename, O_RDONLY);
       backing = mmap(0, LOGICAL_MEMORY_SIZE, PROT_READ, MAP_PRIVATE, backing_fd, 0); 
@@ -167,7 +210,47 @@ int main(int argc, const char *argv[]){
           }
           add_to_tlb(logical_page, physical_page);
         }
-             
+       
+       //apply only if the replacement is LRU (need to set value to 0)
+        if(p) {
+	  //first, age value is incremented
+	  LRU_node *curr = lru_head;
+
+	  while(curr->next != NULL){
+	    (curr->next)->age_val++;
+	    curr = curr->next;
+	  }
+
+	  curr = lru_head;
+
+	  int flag = 1;
+	  while(curr->next != NULL){
+	      curr = curr->next;
+	      if(curr->data == logical_page){
+		curr->age_val = 0;
+		flag = 0;
+		break;
+	      }
+	  }     
+       
+         if(flag){
+		  //age value of page i is set to 0, after creating lru_node
+		  LRU_node *new_node = malloc(sizeof(LRU_node));
+		  new_node->data = logical_page;
+		  new_node->age_val = 0;
+		  new_node->next = NULL;
+
+		  curr->next = new_node;
+		  lru_size++;
+
+		  int flag2 = 1;
+		  if(FRAMES < lru_size){ //return LRU, same operation
+		    LRU();
+		  }
+	  } 
+        }
+       
+       
         int physical_address = (physical_page << OFFSET_BITS) | offset;
         signed char value = main_memory[physical_page * PAGE_SIZE + offset];
         
