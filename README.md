@@ -5,16 +5,16 @@
 
 Part 1:
 
-- In this part we made basic mapping between backing memory and main memory because that physical page an logical page have sama size.
+- In this part we made basic mapping between backing memory and main memory due to the fact that physical page and logical page have the same size.
 
-- search_tlb and add_t_tlb were implemented. 
+- search_tlb and add_t_tlb functions were implemented. 
 
 Part 2:
 
 - FIFO: 
 
--- In the fifo we made basic searching with first part1 implementation and replacing. The first allocated frame was replaced the old one. 
+-- In the fifo replacement, we made basic searching like we've done in part1 and also replacing. Here the procedure is as follows: next frame is replaced with the one that was used first in the case of all frames are used by some other processes. First come first serve concept is implemented in a circular way. 
 
 - LRU:
 
--- In the LRU part we used node for replacement. Data, age and the next node is included on the node. We traversed the list, find the node which have biggest age value. Then the LRU function returns to the data of the this node. Then this function used in the main for LRU replecement.
+-- In the LRU part we used a struct what we called LRU_node for the LRU replacement. Using these nodes we implemented a linked-list structure to keep track of the replacement. Data, age value and the next node fields are used to maintain the implementation. We've done the implementation such that the node with the minimum age value denotes the least recently used page. Therefore, we traversed the list, find the node which have the largest age value. Then this node is popped from the linked-list and the policy continues as such.
