@@ -1,7 +1,7 @@
 # Comp304-Project3
 
-Çisem Özden 69707
-Gülbarin Maçin 69163
+- Çisem Özden 69707
+- Gülbarin Maçin 69163
 
 Part 1:
 
